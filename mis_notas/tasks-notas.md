@@ -36,7 +36,7 @@ Es un **argumento, no un cambio a spec-kit**. Existe por el puente con el harnes
 
 ## Lo que salió en el ejercicio (feature 001-cuentas-bancarias)
 
-**18 tareas en 5 fases**:
+**17 tareas en 5 fases** (eran 18; la revisión cambió Polish, ver abajo):
 
 | Fase | Tareas | Qué entrega |
 |---|---|---|
@@ -44,7 +44,7 @@ Es un **argumento, no un cambio a spec-kit**. Existe por el puente con el harnes
 | Foundational | T005–T010 | `ApiFactory`, pruebas de autenticación, `Cuenta`, `CuentaStore`, `ApiKeyMiddleware`, `Program.cs` |
 | US1 Crear | T011–T013 | `CrearCuentaTests`, `CrearCuentaValidator`, `POST /cuentas` |
 | US2 Consultar | T014–T016 | `ConsultarCuentaTests`, `PersistenciaTests`, `GET /cuentas/{id}` |
-| Polish | T017–T018 | Quickstart a mano y cobertura mínima de la constitución |
+| Polish | T017 | `cobertura.md`: cada caso exigido por la constitución con su prueba, más `dotnet test` en verde. El quickstart lo corre el humano en el gate |
 
 - **Los 15 FR quedaron citados en alguna tarea**, incluido FR-013. Ese es el negativo ("MUST NOT exponer…"), y quedó en `Program.cs`, que no mapea ninguna otra ruta.
 - La única tarea sin FR ni R# es T007 (`Cuenta.cs`), que cita la sección de `data-model.md`.
@@ -57,11 +57,22 @@ Es un **argumento, no un cambio a spec-kit**. Existe por el puente con el harnes
 - **`CuentasEndpoints.cs` nace vacío en Foundational.** `Program.cs` ya llama a `MapCuentasEndpoints()`, y cada historia agrega su ruta. Ninguna historia tiene que tocar `Program.cs`.
 - **T002 borra el `UnitTest1.cs` de la plantilla xUnit**, para que no quede una prueba vacía en la solución.
 
+### Lo que cambió con la revisión de la rama
+
+Un revisor independiente probó el plan contra lo que de verdad hace .NET, y cuatro tareas tenían problemas:
+
+- **T001 y la plantilla.** `dotnet new web` trae `app.MapGet("/", …)`, que la regla `solo_dos_endpoints` marca como error: `fase_1` iba a fallar en su primer intento. Ahora T001 pide quitarlo.
+- **T001 y los user-secrets.** `dotnet user-secrets set` falla si el proyecto no tiene `UserSecretsId`. Ahora T001 corre `dotnet user-secrets init`, y `quickstart.md` lo explica.
+- **T014 y el "mismo cuerpo".** `AddProblemDetails` agrega un `traceId` distinto en cada respuesta, así que dos 404 nunca son idénticos byte a byte. Ahora se comparan `status`, `title` y la ausencia de `detail`.
+- **Polish sin código.** El harness juzga el diff. Una fase que solo ejecuta y comprueba no deja nada que compilar ni que leer. Ahora Polish entrega `cobertura.md`, que sí está versionado, y el quickstart pasa a ser la prueba manual del humano.
+
 ## Lo que aprendí
 
 - **La trazabilidad se pide, no viene sola.** La plantilla de tasks no cita requisitos. Sin el argumento, las tareas dirían "implementar endpoint" sin decir qué FR cumplen.
 - **Una tarea por línea.** El formato estricto deja verificar las tareas con una regex: `verificar_traduccion.py` las cuenta y comprueba que ninguna se pierda al pasar a `plan.json`. Mi primera versión de T011 tenía sub-viñetas, y la cita quedaba lejos de la tarea.
 - **Dónde va una prueba depende de cuándo puede fallar.** Test-first no es solo escribir la prueba antes: tiene que poder estar en rojo en ese momento. Eso decidió la ubicación de `PersistenciaTests`.
+- **Una tarea tiene que sobrevivir a la herramienta real.** "Crear el proyecto" parecía obvio, pero la plantilla trae un endpoint y no trae `UserSecretsId`. Esas dos cosas solo se ven corriendo `dotnet new`, no leyendo la spec.
+- **En un harness basado en el diff, cada fase tiene que entregar algo versionado.** Si no, el escéptico no tiene qué juzgar.
 - **Ubicar los FR negativos.** "MUST NOT" no se implementa; se respeta. Igual tiene que quedar anclado en alguna fase, porque si no, el verificador lo marca como FR perdido. Además lo vigila una regla (`solo_dos_endpoints`).
 
 ## Después de tasks

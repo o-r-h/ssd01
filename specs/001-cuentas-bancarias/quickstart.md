@@ -29,11 +29,13 @@ Las pruebas no necesitan configurar nada: cada una usa su propio archivo SQLite 
 
 ## 2. Ejecución manual
 
-Configura la credencial fuera del código (una sola vez):
+Configura la credencial fuera del código (una sola vez). El proyecto ya trae `UserSecretsId` (lo agrega la tarea de Setup con `dotnet user-secrets init`); sin él, `set` falla con *Could not find the global property 'UserSecretsId'*:
 
 ```bash
 dotnet user-secrets set "Auth:ApiKey" "clave-local-de-prueba" --project src/CuentasBancarias.Api
 ```
+
+Alternativa sin user-secrets: la variable de entorno `Auth__ApiKey` en la terminal donde corre la API (nunca en `Properties/launchSettings.json`, que se versiona).
 
 Levanta la API:
 

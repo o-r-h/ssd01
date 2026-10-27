@@ -46,6 +46,8 @@ Tres cosas a revisar en `tasks.md` antes de seguir:
 - **Una tarea por línea**, en formato `- [ ] T001 …`. El verificador cuenta las tareas con una regex.
 - **Encabezados `## Phase N: …`** (o `## Fase N: …`). Las historias van como `User Story N` (o `Historia de usuario N`).
 - **Una prueba va en la fase donde puede fallar.** Test-first exige mostrar la corrida en rojo. Una prueba que ya pasaría al escribirla (p. ej. una de regresión en Polish) no puede dar esa evidencia.
+- **Cada fase entrega algo versionado.** El harness juzga el diff. Una fase que solo ejecuta y comprueba (Polish) entrega un documento con la evidencia, y lo que solo puede comprobar un humano va en su prueba manual.
+- **Las tareas de Setup se escriben contra la herramienta real.** Por ejemplo, `dotnet new web` trae un `MapGet("/")` que la regla de alcance rechaza, y sin `dotnet user-secrets init` el `set` falla.
 
 ### 2. Commit de todo el diseño
 
@@ -114,7 +116,7 @@ Al cerrar cada fase, el reflector propone lecciones y tú decides cada una: `/ha
 
 ## Ejemplo: la feature 001
 
-- `tasks.md` tiene 18 tareas en 5 fases (Setup, Foundational, US1, US2, Polish), y todas citan sus FR, R# y rutas del contrato.
-- El ticket es `SSD-001`. La salida del verificador: `traducción: OK (18 tareas, 15 FR, 5 fases)`.
+- `tasks.md` tiene 17 tareas en 5 fases (Setup, Foundational, US1, US2, Polish), y todas citan sus FR, R# y rutas del contrato.
+- El ticket es `SSD-001`. La salida del verificador: `traducción: OK (17 tareas, 15 FR, 5 fases)`.
 - `fase_4` (US2) depende también de `fase_3`, porque la prueba de durabilidad crea la cuenta con `POST /cuentas`.
 - La siguiente acción es `/fase fase_1`.

@@ -25,7 +25,7 @@ description: "Task list for feature 001-cuentas-bancarias"
 
 **Purpose**: Solución, proyectos y dependencias justificadas en `plan.md`, compilando.
 
-- [ ] T001 Crear la solución `CuentasBancarias.slnx` en la raíz y el proyecto Minimal API `src/CuentasBancarias.Api/CuentasBancarias.Api.csproj` (net10.0, `Nullable` e `ImplicitUsings` habilitados), sin controladores, OpenAPI ni Swagger (R1)
+- [ ] T001 Crear la solución `CuentasBancarias.slnx` en la raíz y el proyecto Minimal API `src/CuentasBancarias.Api/CuentasBancarias.Api.csproj` con `dotnet new web` (net10.0, `Nullable` e `ImplicitUsings` habilitados), sin controladores, OpenAPI ni Swagger; quitar el `app.MapGet("/", …)` que trae la plantilla en `src/CuentasBancarias.Api/Program.cs` y correr `dotnet user-secrets init --project src/CuentasBancarias.Api` para que el `.csproj` tenga `UserSecretsId` (R1, R3)
 - [ ] T002 Crear el proyecto xUnit `tests/CuentasBancarias.Api.Tests/CuentasBancarias.Api.Tests.csproj` con referencia a `src/CuentasBancarias.Api`, agregarlo a `CuentasBancarias.slnx` y borrar el `UnitTest1.cs` de la plantilla (R8)
 - [ ] T003 Agregar `Microsoft.Data.Sqlite` a `src/CuentasBancarias.Api/CuentasBancarias.Api.csproj` y `Microsoft.AspNetCore.Mvc.Testing` a `tests/CuentasBancarias.Api.Tests/CuentasBancarias.Api.Tests.csproj`; ningún otro paquete (R4, R8)
 - [ ] T004 [P] Dejar `src/CuentasBancarias.Api/appsettings.json` con `ConnectionStrings:Cuentas = "Data Source=cuentas.db"` y **sin** la sección `Auth` (R3, R4)
@@ -89,7 +89,7 @@ description: "Task list for feature 001-cuentas-bancarias"
 
 > **NOTE: Escribir estas pruebas PRIMERO y comprobar que FALLAN antes de implementar**
 
-- [ ] T014 [P] [US2] Escribir `tests/CuentasBancarias.Api.Tests/ConsultarCuentaTests.cs`: escenarios de aceptación 1–4 de US2 con la cuenta sembrada con `ApiFactory.SembrarCuenta`, sin usar `POST /cuentas`; un GUID inexistente y un identificador con formato inválido (`no-es-un-guid`) devuelven `404` con el **mismo** cuerpo, sin detalles internos; sin credencial responde `401` aunque la cuenta exista (FR-007, FR-008, FR-009, FR-010, FR-011, FR-012; R3, R6, R7, R8; `GET /cuentas/{id}`)
+- [ ] T014 [P] [US2] Escribir `tests/CuentasBancarias.Api.Tests/ConsultarCuentaTests.cs`: escenarios de aceptación 1–4 de US2 con la cuenta sembrada con `ApiFactory.SembrarCuenta`, sin usar `POST /cuentas`; un GUID inexistente y un identificador con formato inválido (`no-es-un-guid`) devuelven `404` indistinguibles: mismo `status`, mismo `title` (`"Not Found"`) y sin `detail` ni datos internos (el `traceId` que agrega `AddProblemDetails` varía por petición y no se compara); sin credencial responde `401` aunque la cuenta exista (FR-007, FR-008, FR-009, FR-010, FR-011, FR-012; R3, R6, R7, R8; `GET /cuentas/{id}`)
 - [ ] T015 [P] [US2] Escribir `tests/CuentasBancarias.Api.Tests/PersistenciaTests.cs`: crea una cuenta con `POST /cuentas` en una `ApiFactory`, la libera, levanta otra sobre el **mismo** archivo SQLite y la consulta con `GET /cuentas/{id}` → `200` con los mismos datos (FR-006; R4, R8; `POST /cuentas`, `GET /cuentas/{id}`)
 
 ### Implementation for User Story 2
@@ -104,10 +104,11 @@ description: "Task list for feature 001-cuentas-bancarias"
 
 **Purpose**: Validar la feature de punta a punta con la API real y cerrar los criterios de éxito.
 
-- [ ] T017 Ejecutar `specs/001-cuentas-bancarias/quickstart.md` completo contra la API levantada con `dotnet run` y `Auth:ApiKey` en user-secrets (crear, consultar, 400 con ambos campos, 401 sin cuerpo con JSON mal formado, 404 idéntico, durabilidad tras reiniciar, la API no arranca sin la clave) y registrar cada respuesta observada y su tiempo (FR-006, FR-009, FR-010; SC-001, SC-003, SC-004, SC-005; `POST /cuentas`, `GET /cuentas/{id}`)
-- [ ] T018 Correr `dotnet test` sobre `CuentasBancarias.slnx` y contrastar las pruebas con la tabla "Cobertura mínima de pruebas" de `specs/001-cuentas-bancarias/plan.md`: cada caso exigido de cada endpoint tiene al menos una prueba y todas pasan (FR-011; SC-006)
+- [ ] T017 Escribir `specs/001-cuentas-bancarias/cobertura.md`: una tabla que lleva cada caso de "Cobertura mínima de pruebas" de `specs/001-cuentas-bancarias/plan.md` y cada criterio SC-001…SC-006 a la prueba que lo cubre (archivo y método) o, si no lo cubre una prueba (SC-005), a su paso de `quickstart.md`; al final, la salida completa de `dotnet test` sobre `CuentasBancarias.slnx`, toda en verde (FR-006, FR-009, FR-010, FR-011; SC-001, SC-002, SC-003, SC-004, SC-005, SC-006; `POST /cuentas`, `GET /cuentas/{id}`)
 
-**Checkpoint**: Quickstart verificado a mano y la cobertura mínima de la constitución cumplida.
+La ejecución de `quickstart.md` de punta a punta contra la API real (crear, consultar, 400 con ambos campos, 401 sin cuerpo con JSON mal formado, 404 indistinguible, durabilidad tras reiniciar, la API no arranca sin la clave) es la **prueba manual** de esta fase: la hace el humano en el gate, no el ejecutor.
+
+**Checkpoint**: `cobertura.md` muestra cada caso exigido por la constitución con su prueba, `dotnet test` pasa completo y el quickstart se verificó a mano.
 
 ---
 
@@ -163,7 +164,7 @@ Task: "Escribir PersistenciaTests en tests/CuentasBancarias.Api.Tests/Persistenc
 1. Setup + Foundational → la API rechaza todo lo que no trae credencial.
 2. US1 → crear cuentas (MVP).
 3. US2 → consultar cuentas y durabilidad.
-4. Polish → quickstart de punta a punta y cobertura mínima.
+4. Polish → mapa de cobertura versionado y quickstart de punta a punta en el gate humano.
 
 La ejecución corre bajo el harness: cada fase de este archivo es una fase del harness, con gate humano y un commit al aprobarse (constitución v1.1.0).
 
