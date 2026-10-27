@@ -42,7 +42,7 @@ antes de la implementación.
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Constitución v1.0.0.
+Constitución v1.0.0; la fila «Flujo de trabajo» se re-verificó contra v1.1.0.
 
 | Principio / regla | Cómo lo cumple este plan | Estado |
 |---|---|---|
@@ -52,7 +52,7 @@ Constitución v1.0.0.
 | **IV. Seguridad básica** | Middleware de API key aplicado a toda petición, antes del enrutamiento al endpoint. Secreto en `Auth:ApiKey` (variable de entorno o user-secrets, nunca en `appsettings.json` versionado). Credencial ausente, vacía o incorrecta → `401` con cuerpo vacío, idéntico en los tres casos. Comparación en tiempo constante. | ✅ PASS |
 | **Restricción: stack** | .NET 10, ASP.NET Core Web API, SQLite, xUnit, según el enunciado del ejercicio. | ✅ PASS |
 | **Restricción: alcance** | Solo crear y consultar. Sin listado, borrado, depósitos, retiros, transferencias, login ni roles (FR-013). | ✅ PASS |
-| **Flujo de trabajo** | El plan pasa el Constitution Check antes de escribir código. Un commit por tarea en `/speckit-implement`. | ✅ PASS |
+| **Flujo de trabajo** | El plan pasa el Constitution Check antes de escribir código. La ejecución va fase por fase bajo el harness, con un commit por fase aprobada (re-verificado contra v1.1.0). | ✅ PASS |
 
 **Cobertura mínima de pruebas (Principio II)**:
 

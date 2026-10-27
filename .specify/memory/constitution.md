@@ -36,9 +36,9 @@ en código fuente. Un rechazo no revela el motivo del fallo.
 
 ## Flujo de trabajo
 
-- El flujo Spec Kit es obligatorio: specify, plan, tasks, implement.
+- El flujo es obligatorio: specify, clarify, plan y tasks con Spec Kit; la ejecución, fase por fase, bajo el harness.
 - Ningún código se escribe sin que el plan haya pasado el Constitution Check.
-- Cada tarea de tasks.md se cierra con un commit propio.
+- Cada fase del harness se cierra con un commit propio al ser aprobada.
 
 ## Governance
 
@@ -50,4 +50,4 @@ El autor enmienda la constitución directamente y sube la versión semántica:
 Todo plan DEBE verificar el cumplimiento de estos principios en su
 Constitution Check y justificar cualquier desviación.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11
+**Version**: 1.1.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-27
