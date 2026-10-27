@@ -70,6 +70,32 @@ y, solo si hace falta, `fuera_de_ejecucion: [{"ref": "FR-xxx", "motivo": "…"}]
 FR que **ninguna tarea implementa**, con el motivo. Un FR negativo (*MUST NOT*) que una
 regla de `rules.json` vigila se ancla en la fase que crea los endpoints, no va aquí.
 
+### Convenciones (para no adivinar)
+
+- **Contrato:** `validate_plan` en `~/.claude/hooks/lib/contracts.py`. `depende_de` es una
+  lista de ids de fase (`["fase_2"]`), `prueba_manual` es `{requerida: bool, url: str,
+  datos: str}` y `anclajes` es una lista de `{ref, confianza}`.
+- **`titulo`:** el texto que sigue a `## Phase N: ` en `tasks.md`, tal cual (con prioridad
+  y adornos).
+- **`pasos`:** el texto literal de cada tarea, sin el checkbox, con sus marcas `[P]`/`[USn]`.
+  No se resume.
+- **`ref` de los anclajes:** ruta completa desde la raíz del repo y, como ancla:
+  - el id semántico para FR, SC y decisiones de research (`spec.md#FR-003`,
+    `spec.md#SC-001`, `research.md#R2`);
+  - el slug de GitHub para encabezados de `data-model.md` o `plan.md`
+    (`data-model.md#esquema-sqlite`);
+  - el JSON pointer para el contrato (`openapi.yaml#/paths/~1recurso~1{id}`,
+    `#/components/securitySchemes/ApiKey`).
+  
+  Todo lo que cite una tarea se ancla, aunque no sea un FR.
+- **Escenarios "literales":** se conservan el markdown y la numeración de `spec.md`.
+- **`prueba_manual` de fases sin endpoints** (Setup) o solo con rechazos (Foundational):
+  `url` lo dice ("no aplica todavía", o la URL esperando 401). En `datos` va qué
+  comprueba el humano: compila, `dotnet test` corre, la API no arranca sin la credencial.
+- **Nunca copies una credencial literal** de `quickstart.md` a `datos`: usa
+  `<clave-local>`. `plan.json` es un `.json` y la regla `no_secretos` lo vigila si entra
+  a un diff.
+
 **Frase fija de evidencia test-first** (literal, sin cambiar una letra):
 
 > Evidencia test-first: el `resultado.md` del primer intento de esta fase (`.harness/tickets/<ticket_id>/<fase>/intento_1/resultado.md`) contiene, en una sección `## Rojo`, la salida de `dotnet test` con las pruebas nuevas fallando, antes de la implementación; los intentos siguientes lo referencian y no lo repiten
