@@ -1,0 +1,23 @@
+{
+  "perfil": "ssd01",
+  "audit_comments": {
+    "requerido": false,
+    "severidad": "warning",
+    "nota": "Repo nuevo con historial git: no usa los bloques [B]/[E] del código legacy"
+  },
+  "prohibido": [
+    { "id": "no_secretos", "archivos": [".cs", ".json"], "excluir": ["tests/", ".claude/", "specs/"], "severidad": "error",
+      "patron": "(?i)\\b(api[-_]?key|password|pwd|secret)\"?\\s*[:=]\\s*@?\"[^\"\\s]+\"",
+      "mensaje": "Principio IV: los secretos (la API key, credenciales) se leen de configuración —user-secrets o variable de entorno, p. ej. Auth:ApiKey—, nunca se escriben como literal en código ni en appsettings*.json" },
+    { "id": "dep_nueva", "archivos": [".csproj"], "severidad": "warning",
+      "patron": "<PackageReference\\s",
+      "mensaje": "Principio III: dependencia nueva. El escéptico la contrasta con la lista justificada en el plan.md de la feature; si no está ahí, requiere aprobación humana" },
+    { "id": "solo_dos_endpoints", "archivos": [".cs"], "excluir": ["tests/"], "severidad": "error",
+      "patron": "\\bMap(Put|Delete|Patch|Methods)\\s*\\(|\\bMap(Get|Post)\\s*\\(\\s*\"(?!/cuentas(/|\"))",
+      "mensaje": "Restricción de alcance: solo crear (POST /cuentas) y consultar (GET /cuentas/{id}). Cualquier otra operación o ruta requiere enmienda a la constitución" }
+  ],
+  "checks_estructurales": ["dotnet_build"],
+  "grupos": {
+    "constitucion": ["no_secretos", "dep_nueva", "solo_dos_endpoints"]
+  }
+}
