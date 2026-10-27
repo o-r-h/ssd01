@@ -1,0 +1,174 @@
+openapi: 3.1.0
+info:
+  title: Cuentas Bancarias API
+  version: 1.0.0
+  description: |
+    Feature 001-cuentas-bancarias. Dos operaciones: crear y consultar una cuenta.
+
+    Toda petición, a cualquier ruta, exige el header `X-Api-Key`. Si falta, está vacío
+    o es incorrecto, la respuesta es `401` sin cuerpo y no se lee ni valida el cuerpo
+    de la petición (FR-009, FR-010).
+
+security:
+  - ApiKey: []
+
+paths:
+  /cuentas:
+    post:
+      operationId: crearCuenta
+      summary: Crear una cuenta bancaria (US1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearCuentaRequest'
+            examples:
+              valida:
+                value: { titular: "Ana Pérez", saldo: 1000 }
+              conEspacios:
+                summary: El titular se guarda recortado como "Ana Pérez"
+                value: { titular: "  Ana Pérez  ", saldo: 0 }
+      responses:
+        '201':
+          description: Cuenta creada.
+          headers:
+            Location:
+              description: URL de la cuenta creada, `/cuentas/{id}`.
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cuenta'
+              example:
+                id: "01933b6e-2c1a-7c3e-9f4b-5a6d7e8f9a0b"
+                titular: "Ana Pérez"
+                saldo: 1000
+        '400':
+          description: |
+            Datos inválidos o faltantes. `errors` incluye **todos** los campos que fallan
+            (FR-003a). También se responde 400 si el cuerpo no es JSON válido. No se crea
+            ninguna cuenta.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              examples:
+                variosCampos:
+                  summary: Titular vacío y saldo negativo en la misma petición
+                  value:
+                    type: "https://tools.ietf.org/html/rfc9110#section-15.5.1"
+                    title: "One or more validation errors occurred."
+                    status: 400
+                    errors:
+                      titular: ["El titular es obligatorio."]
+                      saldo: ["El saldo no puede ser negativo."]
+                saldoComoTexto:
+                  summary: Saldo enviado como texto numérico
+                  value:
+                    type: "https://tools.ietf.org/html/rfc9110#section-15.5.1"
+                    title: "One or more validation errors occurred."
+                    status: 400
+                    errors:
+                      saldo: ["El saldo debe ser un número."]
+        '401':
+          $ref: '#/components/responses/NoAutorizado'
+
+  /cuentas/{id}:
+    get:
+      operationId: consultarCuenta
+      summary: Consultar una cuenta por su identificador (US2)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: |
+            Identificador opaco devuelto al crear la cuenta. Un valor que no es un GUID
+            válido produce el mismo 404 que un GUID inexistente.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Cuenta encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cuenta'
+        '404':
+          description: |
+            No existe una cuenta con ese identificador, o el identificador tiene formato
+            inválido. Mismo cuerpo en ambos casos, sin detalles internos (FR-008, SC-004).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: "https://tools.ietf.org/html/rfc9110#section-15.5.5"
+                title: "Not Found"
+                status: 404
+        '401':
+          $ref: '#/components/responses/NoAutorizado'
+
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: Credencial de cliente única y compartida. El valor vive en la configuración `Auth:ApiKey`.
+
+  responses:
+    NoAutorizado:
+      description: |
+        Credencial ausente, vacía o incorrecta. Respuesta idéntica en los tres casos y
+        sin cuerpo: no revela el motivo (Principio IV, SC-003).
+
+  schemas:
+    CrearCuentaRequest:
+      type: object
+      description: |
+        Los nombres de propiedad son sensibles a mayúsculas. Las propiedades no
+        reconocidas se ignoran.
+      required: [titular, saldo]
+      properties:
+        titular:
+          type: string
+          description: Se recorta al inicio y al final. Tras recortar, no puede quedar vacío y admite hasta 100 caracteres.
+          maxLength: 100
+        saldo:
+          type: number
+          description: Debe enviarse como número JSON; un string, aunque contenga dígitos, es inválido. Hasta 2 decimales.
+          minimum: 0
+          maximum: 1000000.00
+          multipleOf: 0.01
+
+    Cuenta:
+      type: object
+      required: [id, titular, saldo]
+      properties:
+        id:
+          type: string
+          format: uuid
+        titular:
+          type: string
+        saldo:
+          type: number
+
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            errors:
+              type: object
+              description: Clave = nombre del campo (`titular`, `saldo`, o `""` si el cuerpo no es un objeto). Valor = mensajes.
+              additionalProperties:
+                type: array
+                items: { type: string }
