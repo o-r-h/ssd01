@@ -78,4 +78,23 @@ Decisiones tomadas:
 - **Cada fase del harness corresponde a una fase de `tasks.md`**, más o menos una por historia de usuario (unas 5 en total), no una por tarea. Con una por tarea serían unos 20 gates manuales.
 - **El commit se hace al aprobar cada fase, no por tarea.** El harness compara contra `HEAD`: un commit en medio de una fase esconde el trabajo a `run-checks` y al escéptico. Hay que enmendar la regla de la constitución que pedía un commit por tarea.
 
-Pendiente: diseñar y construir el puente.
+### Lo que se construyó (2026-10-27)
+
+Con el [diseño](../docs/superpowers/specs/2026-10-26-puente-speckit-harness-design.md) aprobado y un [plan](../docs/superpowers/plans/2026-10-27-puente-speckit-harness.md) de 9 tareas:
+
+- **Constitución v1.1.0.** La ejecución va bajo el harness, con un commit por fase aprobada. La fila "Flujo de trabajo" del Constitution Check de la 001 se actualizó a mano, sin volver a correr `/speckit-plan`.
+- **`.gitignore`.** Deja fuera `.harness/` y todo lo generado (build, SQLite, `__pycache__`), para que no entre al diff de una fase.
+- **Perfil `ssd01`.** Incluye:
+  - `rules.json` con tres reglas sacadas de la constitución;
+  - el check `dotnet_build` copiado;
+  - el agente `agent-dotnet-api`.
+
+  Las reglas se prueban contra el motor real de producción: se importa, no se modifica.
+- **Apertura del ticket.**
+  - `/ticket-abrir-sdd` y el skill `speckit-a-harness` traducen `tasks.md` a `plan.json`.
+  - `verificar_traduccion.py` comprueba la traducción sin modelo: tareas, FR, Independent Test, evidencia test-first y gate humano. Tiene 21 pruebas.
+- **Tasks y ticket.** `tasks.md` de la 001 con trazabilidad ([tasks-notas.md](tasks-notas.md)). Ticket `SSD-001` abierto con un plan válido de 5 fases.
+
+Cómo se usa: [docs/puente-speckit-harness.md](../docs/puente-speckit-harness.md).
+
+Pendiente: ejecutar las 5 fases con `/fase` y, al terminar, escribir una nota con lo aprendido del puente y los hallazgos.
