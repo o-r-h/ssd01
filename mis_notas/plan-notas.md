@@ -92,9 +92,21 @@ Con el [diseño](../docs/superpowers/specs/2026-10-26-puente-speckit-harness-des
   Las reglas se prueban contra el motor real de producción: se importa, no se modifica.
 - **Apertura del ticket.**
   - `/ticket-abrir-sdd` y el skill `speckit-a-harness` traducen `tasks.md` a `plan.json`.
-  - `verificar_traduccion.py` comprueba la traducción sin modelo: tareas, FR, Independent Test, evidencia test-first y gate humano. Tiene 21 pruebas.
+  - `verificar_traduccion.py` comprueba la traducción sin modelo: tareas, FR, Independent Test, evidencia test-first y gate humano. Tiene 27 pruebas; con las 12 de las reglas, la suite suma 39.
 - **Tasks y ticket.** `tasks.md` de la 001 con trazabilidad ([tasks-notas.md](tasks-notas.md)). Ticket `SSD-001` abierto con un plan válido de 5 fases.
 
 Cómo se usa: [docs/puente-speckit-harness.md](../docs/puente-speckit-harness.md).
+
+### La revisión de la rama
+
+Un revisor independiente, sin mi contexto, revisó toda la rama: 0 críticos y 8 importantes. Todos se corrigieron:
+
+- **Reglas.** `solo_dos_endpoints` no detectaba `MapGroup`, rutas anidadas ni el `MapGet("/")` de la plantilla. `no_secretos` no detectaba `Auth__ApiKey` en `launchSettings.json`.
+- **Tareas.** Faltaba `user-secrets init`, y en Polish no había nada versionado (detalle en [tasks-notas.md](tasks-notas.md)).
+- **Evidencia test-first en los reintentos.** Ahora se ancla al `## Rojo` del primer intento.
+- **El verificador ante variaciones de forma.** Ahora detecta tareas fuera de fase, la viñeta `*`, `[USn]` y FR sin negrita.
+- **La skill nunca se había ejecutado.** Yo había generado el primer `plan.json` con un script. Un agente nuevo, solo con `SKILL.md`, tradujo a la primera y su plan es el que quedó en `SSD-001`. Las once ambigüedades que reportó quedaron como "Convenciones" en la skill.
+
+Lo que aprendí: **un verificador determinista dice si el resultado es válido, pero no si el camino que lo produce funciona.** Para saber si la skill sirve, hubo que ejecutarla en limpio.
 
 Pendiente: ejecutar las 5 fases con `/fase` y, al terminar, escribir una nota con lo aprendido del puente y los hallazgos.
