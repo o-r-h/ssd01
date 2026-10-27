@@ -7,14 +7,14 @@
   },
   "prohibido": [
     { "id": "no_secretos", "archivos": [".cs", ".json"], "excluir": ["tests/", ".claude/", "specs/"], "severidad": "error",
-      "patron": "(?i)\\b(api[-_]?key|password|pwd|secret)\"?\\s*[:=]\\s*@?\"[^\"\\s]+\"",
+      "patron": "(?i)(?<![a-z0-9])(api[-_]?key|password|pwd|secret|secreto|clave|contrase(?:ñ|n)a)\"?\\]?\\s*[:=,]\\s*@?\"[^\"\\s]+\"",
       "mensaje": "Principio IV: los secretos (la API key, credenciales) se leen de configuración —user-secrets o variable de entorno, p. ej. Auth:ApiKey—, nunca se escriben como literal en código ni en appsettings*.json" },
     { "id": "dep_nueva", "archivos": [".csproj"], "severidad": "warning",
       "patron": "<PackageReference\\s",
       "mensaje": "Principio III: dependencia nueva. El escéptico la contrasta con la lista justificada en el plan.md de la feature; si no está ahí, requiere aprobación humana" },
     { "id": "solo_dos_endpoints", "archivos": [".cs"], "excluir": ["tests/"], "severidad": "error",
-      "patron": "\\bMap(Put|Delete|Patch|Methods)\\s*\\(|\\bMap(Get|Post)\\s*\\(\\s*\"(?!/cuentas(/|\"))",
-      "mensaje": "Restricción de alcance: solo crear (POST /cuentas) y consultar (GET /cuentas/{id}). Cualquier otra operación o ruta requiere enmienda a la constitución" }
+      "patron": "\\.Map(?:Put|Delete|Patch|Methods|Fallback|HealthChecks|OpenApi|Controllers|Group)?\\s*\\(|\\.MapGet\\s*\\((?!\\s*\"/cuentas/\\{id\\}\"\\s*,)|\\.MapPost\\s*\\((?!\\s*\"/cuentas\"\\s*,)",
+      "mensaje": "Restricción de alcance: solo crear (MapPost(\"/cuentas\", …)) y consultar (MapGet(\"/cuentas/{id}\", …)), con la ruta completa y literal, sin MapGroup. Cualquier otra operación o ruta —incluidos los restos de la plantilla, como MapGet(\"/\")— se quita o requiere enmienda a la constitución" }
   ],
   "checks_estructurales": ["dotnet_build"],
   "grupos": {

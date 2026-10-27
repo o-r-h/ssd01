@@ -46,6 +46,26 @@ class ReglasDelPerfil(unittest.TestCase):
             self.assertNotIn("no_secretos", self.ids(API + "Program.cs", linea), linea)
             self.assertNotIn("no_secretos", self.ids(API + "appsettings.json", linea), linea)
 
+    def test_positivos_no_secretos_atajos_de_dotnet(self):
+        for ruta, linea in [
+                (API + "Properties/launchSettings.json", '"Auth__ApiKey": "dev-key"'),
+                (API + "Program.cs", 'Environment.SetEnvironmentVariable("Auth__ApiKey", "dev");'),
+                (API + "Program.cs", 'builder.Configuration["Auth:ApiKey"] = "dev";'),
+                (API + "Program.cs", 'var clave = "s3creta";'),
+                (API + "appsettings.json", '"Secreto": "x9"')]:
+            self.assertIn("no_secretos", self.ids(ruta, linea), linea)
+
+    def test_positivos_solo_dos_endpoints_fuera_de_alcance(self):
+        for linea in ['app.MapGet("/", () => "Hello World!");',
+                      'app.MapGet("/cuentas/{id}/movimientos", h);',
+                      'app.Map("/x", h);', 'app.MapFallback(h);', 'app.MapHealthChecks("/health");',
+                      'app.MapOpenApi();', 'app.MapControllers();', 'var g = app.MapGroup("/cuentas");',
+                      'app.MapGet(Rutas.Cuenta, h);']:
+            self.assertIn("solo_dos_endpoints", self.ids(API + "Program.cs", linea), linea)
+
+    def test_negativo_registro_de_endpoints(self):
+        self.assertNotIn("solo_dos_endpoints", self.ids(API + "Program.cs", "app.MapCuentasEndpoints();"))
+
     def test_positivos_solo_dos_endpoints(self):
         for linea in ['app.MapDelete("/cuentas/{id}", h);', 'app.MapPut("/cuentas/{id}", h);',
                       'app.MapPatch("/cuentas/{id}", h);', 'app.MapGet("/health", h);',
