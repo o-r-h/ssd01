@@ -1,0 +1,14 @@
+# Estado del harness: cada ticket y fase vive aquí, fuera del historial
+.harness/
+
+# Salidas del build y de las pruebas de .NET
+bin/
+obj/
+TestResults/
+
+# Base SQLite local y sus archivos auxiliares
+*.db
+*.db-*
+
+# Caché de Python (checks del perfil y pruebas del puente)
+__pycache__/
