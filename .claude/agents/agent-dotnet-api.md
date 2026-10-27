@@ -58,13 +58,16 @@ si se confirmó.
 Dentro de la misma fase:
 
 1. Escribe primero las pruebas que piden los pasos.
-2. Corre `dotnet test` y pega la salida **en rojo** en `intento_N/resultado.md`, bajo
+2. Corre `dotnet test` y pega la salida **en rojo** en `intento_1/resultado.md`, bajo
    `## Rojo`. Las pruebas nuevas deben fallar por falta de la implementación, no por un
    error de compilación ajeno a la fase.
 3. Implementa hasta verde y pega la salida bajo `## Verde`.
 
-El escéptico verifica la sección `## Rojo`: está en el `criterio_exito` de toda fase con
-pruebas. En una fase sin pruebas, `## Rojo` dice "no aplica" y por qué.
+El escéptico verifica la sección `## Rojo` del **primer intento**: está en el
+`criterio_exito` de toda fase con pruebas. En un reintento (`intento_actual > 1`) el rojo
+ya no se puede reproducir, porque tu trabajo anterior sigue en el árbol: el `resultado.md`
+de ese intento remite al `## Rojo` de `intento_1` y trae su propio `## Verde`. En una fase
+sin pruebas, `## Rojo` dice "no aplica" y por qué.
 
 ## 4. Guardrails
 
@@ -75,8 +78,11 @@ pruebas. En una fase sin pruebas, `## Rojo` dice "no aplica" y por qué.
    código ni en `appsettings*.json`. Las pruebas (`tests/`) sí pueden usar una clave literal
    de prueba.
 2. **`solo_dos_endpoints`** (error, restricción de alcance de la constitución): solo
-   existen crear y consultar bajo `/cuentas`. Cualquier otro `Map*` o ruta requiere enmienda
-   a la constitución: detente y repórtalo.
+   existen `MapPost("/cuentas", …)` y `MapGet("/cuentas/{id}", …)`, con la ruta completa y
+   literal y **sin `MapGroup`**. Los restos de la plantilla de `dotnet new` (`MapGet("/")`,
+   `/weatherforecast`, `MapOpenApi`) se **quitan**: no son alcance nuevo. Si la fase de
+   verdad necesita otra operación o ruta, eso sí requiere enmienda a la constitución:
+   detente y repórtalo.
 3. **`dep_nueva`** (warning, Principio III): cada `<PackageReference` se contrasta con la
    lista justificada en `plan.md`. Si necesitas uno que no está, detente y pregunta.
 

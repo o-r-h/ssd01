@@ -17,17 +17,19 @@ import re
 import sys
 from pathlib import Path
 
-FRASE_TEST_FIRST = ("Evidencia test-first: `intento_N/resultado.md` de esta fase contiene, "
-                    "en una sección `## Rojo`, la salida de `dotnet test` con las pruebas "
-                    "nuevas fallando, antes de la implementación")
+FRASE_TEST_FIRST = ("Evidencia test-first: el `resultado.md` del primer intento de esta fase "
+                    "(`.harness/tickets/<ticket_id>/<fase>/intento_1/resultado.md`) contiene, en una "
+                    "sección `## Rojo`, la salida de `dotnet test` con las pruebas nuevas fallando, "
+                    "antes de la implementación; los intentos siguientes lo referencian y no lo repiten")
 
 RE_FASE = re.compile(r"^##\s+(?:Phase|Fase)\s+\d+\s*:\s*(.+?)\s*$", re.IGNORECASE)
 RE_HISTORIA = re.compile(r"(?:User Story|Historia de usuario)\s+(\d+)", re.IGNORECASE)
 RE_SUBSECCION_PRUEBAS = re.compile(r"^###\s+(?:Tests|Pruebas)\b", re.IGNORECASE)
-RE_TAREA = re.compile(r"^\s*-\s*\[[ xX]\]\s*(T\d{3})\b")
+RE_TAREA = re.compile(r"^\s*[-*]\s*\[[ xX]\]\s*(T\d{3})\b")
+RE_ETIQUETA_HISTORIA = re.compile(r"\[US(\d+)\]")
 RE_ARCHIVO_PRUEBA = re.compile(r"tests[/\\]\S*Tests?\.cs\b")
 RE_PASO = re.compile(r"^\s*(T\d{3})\b")
-RE_FR_DEFINIDO = re.compile(r"\*\*(FR-\d{3}[a-z]?)\*\*")
+RE_FR_DEFINIDO = re.compile(r"^\s*[-*]\s*\**(FR-\d{3}[a-z]?)\**\s*:", re.MULTILINE)
 RE_FR_ANCLADO = re.compile(r"spec\.md#(FR-\d{3}[a-z]?)$")
 RE_FR_ID = re.compile(r"^FR-\d{3}[a-z]?$")
 RE_SPEC_HISTORIA = re.compile(r"^###\s+User Story\s+(\d+)", re.IGNORECASE)
@@ -38,9 +40,14 @@ def _normalizar(texto: str) -> str:
     return " ".join(texto.split())
 
 
-def _fases_tasks(texto: str) -> list[dict]:
-    """Fases de tasks.md con tareas, en orden: titulo, historia, tareas, con_pruebas."""
+def _fases_tasks(texto: str) -> tuple[list[dict], list[str]]:
+    """(fases de tasks.md con tareas, tareas fuera de una fase reconocida).
+
+    Cada fase: titulo, historia, tareas, con_pruebas. La historia sale del título o, si
+    el título no la nombra, de las etiquetas [USn] de sus tareas.
+    """
     fases: list[dict] = []
+    huerfanas: list[str] = []
     actual: dict | None = None
     en_pruebas = False
     for linea in texto.splitlines():
@@ -56,13 +63,20 @@ def _fases_tasks(texto: str) -> list[dict]:
             en_pruebas = False
         elif linea.startswith("### "):
             en_pruebas = bool(RE_SUBSECCION_PRUEBAS.match(linea))
-        elif actual is not None:
+        else:
             tarea = RE_TAREA.match(linea)
-            if tarea:
-                actual["tareas"].append(tarea.group(1))
-                if en_pruebas or RE_ARCHIVO_PRUEBA.search(linea):
-                    actual["con_pruebas"] = True
-    return [f for f in fases if f["tareas"]]
+            if not tarea:
+                continue
+            if actual is None:
+                huerfanas.append(tarea.group(1))
+                continue
+            actual["tareas"].append(tarea.group(1))
+            etiqueta = RE_ETIQUETA_HISTORIA.search(linea)
+            if actual["historia"] is None and etiqueta:
+                actual["historia"] = int(etiqueta.group(1))
+            if en_pruebas or RE_ARCHIVO_PRUEBA.search(linea):
+                actual["con_pruebas"] = True
+    return [f for f in fases if f["tareas"]], huerfanas
 
 
 def _independent_tests(spec: str) -> dict[int, str]:
@@ -117,11 +131,11 @@ def _verificar_fase(fase: dict, fase_tasks: dict, independent_tests: dict[int, s
 def verificar(carpeta_feature: Path, plan: dict) -> list[str]:
     carpeta = Path(carpeta_feature)
     spec = (carpeta / "spec.md").read_text(encoding="utf-8")
-    fases_tasks = _fases_tasks((carpeta / "tasks.md").read_text(encoding="utf-8"))
+    fases_tasks, huerfanas = _fases_tasks((carpeta / "tasks.md").read_text(encoding="utf-8"))
     if not fases_tasks:
         return ["tasks.md: no se reconoce ninguna fase con tareas"]
 
-    errores: list[str] = []
+    errores = [f"{tarea}: está fuera de una fase reconocida de tasks.md" for tarea in huerfanas]
     origen_de_tarea = {t: i for i, f in enumerate(fases_tasks) for t in f["tareas"]}
     independent_tests = _independent_tests(spec)
     fases_por_tarea: dict[str, list[str]] = {}
@@ -196,7 +210,8 @@ def main(argv: list[str]) -> int:
     if errores:
         print("\n".join(errores))
         return 1
-    tareas = sum(len(f["tareas"]) for f in _fases_tasks((carpeta / "tasks.md").read_text(encoding="utf-8")))
+    fases_tasks, _ = _fases_tasks((carpeta / "tasks.md").read_text(encoding="utf-8"))
+    tareas = sum(len(f["tareas"]) for f in fases_tasks)
     frs = len(_frs((carpeta / "spec.md").read_text(encoding="utf-8")))
     print(f"traducción: OK ({tareas} tareas, {frs} FR, {len(plan.get('fases') or [])} fases)")
     return 0

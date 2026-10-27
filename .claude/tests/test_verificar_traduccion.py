@@ -199,6 +199,33 @@ class VerificarTraduccion(unittest.TestCase):
         self.fase(3)["criterio_exito"] = "Se prueba creando una cuenta válida."
         self.assertError("fase_3: tiene pruebas")
 
+    def test_tarea_fuera_de_fase_reconocida(self):
+        self.escribir(SPEC, TASKS.replace("## Phase 5: Polish", "## Phase 5 — Polish"))
+        self.fase(5)["pasos"] = [PASO_FIJO]
+        self.plan["fases"].pop()
+        self.assertError("T006: está fuera de una fase reconocida de tasks.md")
+
+    def test_vineta_asterisco(self):
+        self.escribir(SPEC, TASKS.replace("- [ ] T006", "* [ ] T006"))
+        self.assertEqual(self.errores(), [])
+
+    def test_historia_por_etiqueta(self):
+        self.escribir(SPEC, TASKS.replace("## Phase 3: User Story 1 - Crear", "## Phase 3: US1 - Crear"))
+        self.fase(3)["criterio_exito"] = FRASE_TEST_FIRST
+        self.assertError("fase_3: criterio_exito no contiene literal el Independent Test de User Story 1")
+
+    def test_fr_sin_negrita(self):
+        self.escribir(SPEC + "- FR-014: sin negrita.\n", TASKS)
+        self.assertError("FR-014: no está anclado")
+
+    def test_skill_trae_la_frase_literal(self):
+        skill = (RAIZ / ".claude" / "skills" / "speckit-a-harness" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(FRASE_TEST_FIRST, skill)
+
+    def test_frase_ubica_la_evidencia_en_el_primer_intento(self):
+        self.assertIn("intento_1/resultado.md", FRASE_TEST_FIRST)
+        self.assertIn("los intentos siguientes", FRASE_TEST_FIRST)
+
     def test_main_codigos_de_salida(self):
         ruta_plan = self.carpeta / "plan.json"
         ruta_plan.write_text(json.dumps(self.plan, ensure_ascii=False), encoding="utf-8")

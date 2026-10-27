@@ -72,10 +72,18 @@ regla de `rules.json` vigila se ancla en la fase que crea los endpoints, no va a
 
 **Frase fija de evidencia test-first** (literal, sin cambiar una letra):
 
-> Evidencia test-first: `intento_N/resultado.md` de esta fase contiene, en una sección `## Rojo`, la salida de `dotnet test` con las pruebas nuevas fallando, antes de la implementación
+> Evidencia test-first: el `resultado.md` del primer intento de esta fase (`.harness/tickets/<ticket_id>/<fase>/intento_1/resultado.md`) contiene, en una sección `## Rojo`, la salida de `dotnet test` con las pruebas nuevas fallando, antes de la implementación; los intentos siguientes lo referencian y no lo repiten
 
 El escéptico no recibe `resultado.md` ni ve `.harness/` en el diff: escrita en el
-criterio, la exigencia le llega y la puede verificar leyendo el archivo.
+criterio, la exigencia le llega y la puede verificar leyendo el archivo. Se fija en el
+**primer** intento porque en un reintento las pruebas y el código del intento anterior
+siguen en el árbol de trabajo y el rojo ya no se puede reproducir. `<ticket_id>` y
+`<fase>` se dejan tal cual: el escéptico conoce ambos.
+
+**Una fase sin código** (p. ej. Polish que solo ejecuta y comprueba) no deja nada que
+`dotnet_build` pueda compilar ni que el escéptico pueda leer en el diff. Su
+`criterio_exito` se escribe sobre un entregable versionado de la fase (un documento con
+la evidencia) y lo que solo comprueba un humano va en la prueba manual.
 
 ## `plan.md` (para el humano)
 
